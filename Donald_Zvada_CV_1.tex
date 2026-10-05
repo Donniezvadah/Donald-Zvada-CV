@@ -1,0 +1,329 @@
+%==============================================================================
+%  Donald Zvada — Curriculum Vitae
+%  Engine : pdfLaTeX  (compile twice for page totals)
+%  Fonts  : Lato (text) + FontAwesome 5 (icons)
+%  Palette: blue / lime green
+%==============================================================================
+\documentclass[a4paper,10pt]{article}
+
+%------------------------------------------------ encoding & fonts
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[default,defaultsans]{lato}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{microtype}
+
+%------------------------------------------------ layout
+\usepackage[a4paper,top=1.35cm,bottom=1.5cm,left=1.5cm,right=1.5cm,footskip=0.8cm]{geometry}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xcolor}
+\usepackage{fontawesome5}
+\usepackage[hidelinks]{hyperref}
+
+%------------------------------------------------ palette
+\definecolor{cvblue}{HTML}{0B4DA2}   % primary — headings, links
+\definecolor{cvnavy}{HTML}{08305F}   % deep blue — name, entry titles
+\definecolor{cvlime}{HTML}{8FC93A}   % accent — rules, bullets, icons
+\definecolor{cvleaf}{HTML}{5C8E1B}   % readable lime — small accent text
+\definecolor{cvink}{HTML}{1B2733}    % body text
+\definecolor{cvslate}{HTML}{55657A}  % dates, secondary text
+\definecolor{cvmist}{HTML}{DFE7F2}   % hairlines
+
+\color{cvink}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=cvblue,
+  linkcolor=cvblue,
+  pdftitle={Donald Zvada — Curriculum Vitae},
+  pdfauthor={Donald Zvada},
+  pdfsubject={Curriculum Vitae},
+  pdfkeywords={Statistics, Bayesian methods, Data Science, Quantitative Risk}
+}
+
+%------------------------------------------------ global spacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\tabcolsep}{0pt}
+\setlength{\extrarowheight}{0pt}
+\renewcommand{\arraystretch}{1}
+\linespread{1.03}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize\color{cvslate}Donald Zvada~~\textcolor{cvlime}{\textbullet}~~Curriculum Vitae}
+\fancyfoot[R]{\footnotesize\color{cvslate}Page \thepage\ of \pageref{LastPage}}
+
+%==============================================================================
+%  MACROS
+%==============================================================================
+
+% --- two-tone rule used under the name block
+\newcommand{\cvheaderrule}{%
+  \noindent\textcolor{cvblue}{\rule{0.22\textwidth}{2.6pt}}%
+  \textcolor{cvlime}{\rule{0.13\textwidth}{2.6pt}}%
+  \textcolor{cvmist}{\rule{0.65\textwidth}{2.6pt}}%
+  \par
+}
+
+% --- section heading: blue caps + lime-tipped hairline
+\newcommand{\cvsection}[1]{%
+  \par\penalty-180\vspace{0.95em}%
+  {\bfseries\fontsize{11.5}{12}\selectfont\color{cvblue}\MakeUppercase{#1}}%
+  \par\nobreak\nointerlineskip\vspace{0.52em}%
+  \noindent\textcolor{cvlime}{\rule{2.4em}{1.6pt}}%
+  \textcolor{cvmist}{\rule{\dimexpr\textwidth-2.4em\relax}{1.6pt}}%
+  \par\nobreak\nointerlineskip\vspace{0.42em}\nobreak%
+}
+
+% --- contact chip: icon + text
+\newcommand{\cvchip}[2]{\textcolor{cvlime}{#1}~{\color{cvink}#2}}
+\newcommand{\chipsep}{\hspace{0.7em}\textcolor{cvmist}{\rule{1.1pt}{1.1pt}}\hspace{0.7em}}
+
+% --- entry: #1 role/title  #2 organisation  #3 dates  #4 location
+\newcommand{\cventry}[4]{%
+  \par\vspace{0.42em}\nointerlineskip
+  \noindent\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{1em}}>{\raggedleft\arraybackslash}p{0.30\textwidth}@{}}
+    {\bfseries\color{cvnavy}#1} & {\small\color{cvslate}#3}\\
+    {\small\itshape\color{cvblue}#2} & {\small\color{cvslate}#4}\\
+  \end{tabularx}%
+  \par\nointerlineskip\vspace{0.10em}\nopagebreak%
+}
+
+% --- entry with no location column
+\newcommand{\cventrytwo}[3]{%
+  \par\vspace{0.42em}\nointerlineskip
+  \noindent\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X@{\hspace{1em}}>{\raggedleft\arraybackslash}p{0.30\textwidth}@{}}
+    {\bfseries\color{cvnavy}#1} & {\small\color{cvslate}#3}\\
+    {\small\itshape\color{cvblue}#2} & \\
+  \end{tabularx}%
+  \par\nointerlineskip\vspace{0.10em}%
+}
+
+% --- bullet list with lime square markers
+\newlist{cvitems}{itemize}{1}
+\setlist[cvitems]{
+  label=\textcolor{cvlime}{\raisebox{0.18em}{\rule{0.40em}{0.40em}}},
+  leftmargin=1.25em, labelsep=0.55em,
+  topsep=1.5pt, itemsep=1.2pt, parsep=0pt, partopsep=0pt, after=\vspace{1pt}
+}
+
+% --- dated one-liner (awards, short training items)
+% #1 date  #2 title  #3 detail
+\newcommand{\cvline}[3]{%
+  \par\nointerlineskip
+  \noindent\begin{tabularx}{\textwidth}{@{}p{0.11\textwidth}@{\hspace{0.4em}}>{\raggedright\arraybackslash}X@{}}
+    {\small\color{cvslate}#1} & {\bfseries\color{cvnavy}#2}\\[-2.2pt]
+                              & {\small\color{cvink}#3}\\
+  \end{tabularx}%
+  \par\nointerlineskip\vspace{0.42em}%
+}
+
+% --- skills row: #1 label  #2 content
+\newcommand{\cvskill}[2]{%
+  \par\nointerlineskip
+  \noindent\begin{tabularx}{\textwidth}{@{}p{0.165\textwidth}@{\hspace{0.4em}}>{\raggedright\arraybackslash}X@{}}
+    {\small\bfseries\color{cvblue}#1} & {\small\color{cvink}#2}\\
+  \end{tabularx}%
+  \par\nointerlineskip\vspace{0.30em}%
+}
+
+% --- referee block
+\newcommand{\cvref}[3]{%
+  {\bfseries\color{cvnavy}#1}\par
+  {\small\itshape\color{cvblue}#2}\par
+  {\small\color{cvink}#3}\par
+}
+
+%==============================================================================
+%  HEADER
+%==============================================================================
+\begin{document}
+
+{\fontsize{27}{30}\selectfont\bfseries\color{cvnavy}Donald Zvada}\par
+\vspace{0.22em}
+{\fontsize{10.5}{13}\selectfont\color{cvslate}%
+ PhD Student in Statistics~~\textcolor{cvlime}{\textbullet}~~Bayesian Methods \& Machine Learning~~\textcolor{cvlime}{\textbullet}~~Quantitative Risk}\par
+\vspace{0.55em}
+\cvheaderrule
+\vspace{0.60em}
+
+\noindent{\small
+\cvchip{\faIcon{envelope}}{\href{mailto:zvadad@tcd.ie}{zvadad@tcd.ie}}\chipsep
+\cvchip{\faIcon{envelope}}{\href{mailto:donald@aims.ac.za}{donald@aims.ac.za}}\chipsep
+\cvchip{\faIcon{globe}}{\href{https://donniezvadah.github.io/}{donniezvadah.github.io}}\chipsep
+\cvchip{\faIcon{map-marker-alt}}{Dublin, Ireland}
+\par\vspace{0.30em}
+\cvchip{\faIcon{github}}{\href{https://github.com/Donniezvadah}{github.com/Donniezvadah}}\chipsep
+\cvchip{\faIcon{linkedin}}{\href{https://www.linkedin.com/in/donald-zvada-1528bb1a7}{My LinkedIn Profile}}\chipsep
+\cvchip{\faIcon{university}}{Trinity College Dublin}
+}\par
+
+%==============================================================================
+\cvsection{Profile}
+
+Statistician and data scientist working across Bayesian modelling, machine learning and applied
+health research. Currently a PhD student at Trinity College Dublin on \textbf{T-DIET}, developing
+novel statistical methods for the analysis of longitudinal dietary patterns and their association with
+health outcomes. Holds an MSc in Mathematical Sciences from AIMS South Africa and Stellenbosch
+University, where a distinction-awarded thesis assessed how large language models solve sequential
+decision-making problems, and a BSc Honours in Operations Research and Statistics from NUST
+Zimbabwe, graduating top of both department and faculty. Previously a quantitative risk analyst at
+EY Zimbabwe, developing and validating IFRS~9 credit risk models.
+
+%==============================================================================
+\cvsection{Education}
+
+\cventry{PhD in Statistics}{Trinity College Dublin}{09/2025 -- Present}{Dublin, Ireland}
+\begin{cvitems}
+  \item Thesis (T-DIET): novel statistical methods for the analysis of longitudinal dietary patterns and their association with health outcomes.
+  \item Supervisor: Assistant Prof.\ Silvia D'Angelo. Funded by a Research Ireland scholarship (Frontiers for the Future Programme).
+\end{cvitems}
+
+\cventry{MSc in Mathematical Sciences}{AIMS South Africa \& Stellenbosch University}{09/2024 -- 07/2025}{Cape Town, South Africa}
+\begin{cvitems}
+  \item Coursework in pure mathematics, physics, statistics and machine learning; research thesis awarded a \textbf{distinction}.
+\end{cvitems}
+
+\cventry{BSc Honours in Operations Research and Statistics}{National University of Science and Technology (NUST)}{2019 -- 2023}{Bulawayo, Zimbabwe}
+\begin{cvitems}
+  \item First Division. Overall best graduating male student, class of 2023.
+\end{cvitems}
+
+%==============================================================================
+\cvsection{Research Experience}
+
+\cventry{Doctoral Researcher --- T-DIET}{Trinity College Dublin}{09/2025 -- Present}{Dublin, Ireland}
+\begin{cvitems}
+  \item Developing Bayesian methods for longitudinal dietary composition data, linking dietary patterns to health outcomes.
+  \item Building hidden Markov and mixture-model approaches to identify and track dietary regimes over time, implemented in R.
+\end{cvitems}
+
+\cventry{MSc Research Project}{AIMS South Africa --- Supervisor: Prof.\ Audrey Durand (Universit\'e Laval, Canada)}{03/2025 -- 06/2025}{Cape Town, South Africa}
+\begin{cvitems}
+  \item \emph{Assessing the ability of Large Language Models to solve sequential decision-making problems}: characterised LLM behaviour on the multi-armed bandit problem against classical bandit algorithms.
+  \item Awarded a distinction.
+\end{cvitems}
+
+\cventry{Research Participant --- g-RIPS-Sendai}{AIMR, Tohoku University (with IPAM, UCLA)}{06/2025 -- 08/2025}{Sendai, Japan}
+\begin{cvitems}
+  \item Industrial research project on \href{https://www.mccs.tohoku.ac.jp/g-rips/report/2025/pdf/Mitsubishi\%20B_final_report.pdf}{key relay protocols for quantum key distribution}, within the graduate-level Research in Industrial Projects for Students programme.
+\end{cvitems}
+
+%==============================================================================
+\cvsection{Professional Experience}
+
+\cventry{Quantitative Risk Analyst}{EY Zimbabwe}{12/2023 -- 08/2024}{Harare, Zimbabwe}
+\begin{cvitems}
+  \item Developed and validated IFRS~9 credit risk models --- PD, LGD, EAD and macroeconomic variable (MEV) models --- for client compliance with the IFRS~9 standard.
+  \item Delivered IFRS~9 model validation and review support on audit assignments.
+  \item Developed, implemented and reviewed IFRS~9 frameworks, systems and tools.
+\end{cvitems}
+
+\cventry{Reporting Analyst (Intern)}{EcoCash Holdings --- Product Solutions \& Operations Management}{2021 -- 2022}{Harare, Zimbabwe}
+\begin{cvitems}
+  \item Prepared management reports and presentations; ran product beta testing in the development environment and competitor analysis.
+  \item Handled data entry, cleaning, analysis and exploratory visualisation, building dashboards in Microsoft Excel and Power BI.
+\end{cvitems}
+
+%==============================================================================
+\cvsection{Teaching Experience}
+
+\cventry{Teaching Assistant \& Demonstrator}{Trinity College Dublin}{11/2025 -- Present}{Dublin, Ireland}
+\begin{cvitems}
+  \item \textbf{R Programming for Medical Students} --- computer lab sessions and one-to-one support in R.
+  \item \textbf{Applied Probability I} --- tutorials, labs and assignment grading.
+  \item \textbf{Foundations of Statistics} --- tutorials, labs and assignment grading.
+  \item \textbf{Statistics and computation} --- Lab session in R Programming.
+  \item \textbf{Time Series Analysis} --- lab sessions in RStudio.
+  \item \textbf{Multivariate Analysis} --- lab sessions in RStudio.
+  \item \textbf{Mathematics II} --- mathematical logic for computer science.
+  \item \textbf{Engineering Practice 2} --- grading assignments; supporting students in report writing and presentations.
+  
+\end{cvitems}
+
+\cventry{Tutor (voluntary)}{National University of Science and Technology}{2022 -- Present}{Bulawayo, Zimbabwe}
+\begin{cvitems}
+  \item Mathematics tutoring and final-year project guidance for NUST students.
+\end{cvitems}
+
+%==============================================================================
+\cvsection{Technical Skills \& Expertise}
+
+\cvskill{Programming}{Python (modular programming), R / RStudio, Macaulay2}
+\cvskill{Analytics \& BI}{Power BI (dashboards and reporting), Microsoft Excel, SPSS, Microsoft Office}
+\cvskill{Version Control}{Git, GitHub}
+\cvskill{Methods}{Bayesian modelling, machine learning, time series analysis, multivariate analysis, monitoring and evaluation}
+\cvskill{Domain}{Quantitative risk analysis, IFRS~9 model development \& validation, credit control, algebraic systems biology (Cyclone)}
+
+%==============================================================================
+\cvsection{Awards \& Scholarships}
+
+\cvline{2025}{PhD Scholarship --- Research Ireland}{Frontiers for the Future Programme.}
+\cvline{09/2024}{Mastercard Foundation Scholarship --- Mastercard Foundation}{Full funding for the MSc in Mathematical Sciences.}
+\cvline{2023}{Emmerson Dambudzo Mnangagwa Chancellor's Award --- President and Cabinet Office}{NUST overall best graduating male student, class of 2023.}
+\cvline{2023}{Vice Chancellor's Award --- NUST}{Overall best graduating student, Department of Operations Research and Statistics.}
+\cvline{2023}{Moonlight Award for the Best Graduating Student --- Moonlight Zimbabwe}{Overall best graduating student, Faculty of Applied Sciences.}
+\cvline{2021, 2023}{NUST Book Prize --- NUST}{Best student in the department, 2021 and 2023 calendar years.}
+
+%==============================================================================
+\cvsection{Training \& Professional Development}
+
+\cventry{Academy for PhD Training in Statistics (APTS)}{Universities of Nottingham and St Andrews}{04/2026 -- 07/2026}{United Kingdom}
+\begin{cvitems}
+  \item High-Dimensional Statistics and Statistical Modelling --- Nottingham, April 2026.
+  \item Applied Stochastic Processes and Computer Intensive Statistics --- St Andrews, July 2026.
+\end{cvitems}
+
+\cventry{PhD Preparatory Coursework}{Trinity College Dublin}{09/2025 -- 12/2026}{Dublin, Ireland}
+\begin{cvitems}
+  \item Research Integrity and Impact in an Open Scholarship Era --- \textcolor{cvleaf}{Pass}.
+  \item Teaching and Supporting Learning for Graduate Teaching Assistants --- \textcolor{cvleaf}{Pass}.
+  \item Research Methods (MSc / PhD by Research) --- ongoing.
+\end{cvitems}
+
+\cventry{Africa Scientifique Workshop}{Science communication skills}{}{Cape Town, South Africa}
+
+%==============================================================================
+\cvsection{Leadership \& Outreach}
+
+\cventry{Organiser --- Deep Learning IndabaX Zimbabwe}{\href{https://www.indabaxzimbabwe.com/\#/about}{indabaxzimbabwe.com}}{01/2025 -- Present}{Harare, Zimbabwe}
+\begin{cvitems}
+  \item Build a space where local researchers, students and practitioners engage with current AI research.
+\end{cvitems}
+
+\cventry{Trainer --- International Olympiad in Artificial Intelligence (IOAI)}{IOAI Zimbabwe}{01/2026 -- Present}{Harare, Zimbabwe}
+\begin{cvitems}
+  \item Prepare students to compete in the continental and international IOAI contests.
+\end{cvitems}
+
+\cventry{Mastercard Foundation Scholars Student Representative}{AIMS South Africa}{2024 -- 08/2025}{Cape Town, South Africa}
+\begin{cvitems}
+  \item Liaised between scholars and the Mastercard Foundation team; organised meetings, reporting and community give-back sessions.
+\end{cvitems}
+
+\cventry{Tutoring Lead --- House of Science Outreach Programme}{AIMS South Africa}{2024 -- 08/2025}{Cape Town, South Africa}
+\begin{cvitems}
+  \item Planned, scheduled and led tutoring sessions for school children, and mentored students.
+\end{cvitems}
+
+%==============================================================================
+\cvsection{References}
+
+\noindent\begin{tabularx}{\textwidth}{@{}XXX@{}}
+\begin{minipage}[t]{\linewidth}
+\cvref{Assistant Prof.\ Silvia D'Angelo}{PhD Supervisor\\Trinity College Dublin}{\href{mailto:dangelos@tcd.ie}{dangelos@tcd.ie}}
+\end{minipage} &
+\begin{minipage}[t]{\linewidth}
+\cvref{Dr Mpfareleni Rejoyce Gavhi}{Researcher \& House of Science Manager\\AIMS South Africa}{\href{mailto:rejoyce@aims.ac.za}{rejoyce@aims.ac.za}}
+\end{minipage} &
+\begin{minipage}[t]{\linewidth}
+\cvref{Prof.\ Precious Mdlongwa}{Department Chair in Statistics\\NUST, Zimbabwe}{\href{mailto:precious.mdlongwa@nust.ac.zw}{precious.mdlongwa@nust.ac.zw}\\+263 712 747 990}
+\end{minipage}\\
+\end{tabularx}
+
+\end{document}

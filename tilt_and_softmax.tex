@@ -1,0 +1,496 @@
+% Standalone note: why softmax transitions cannot enter the telescoping update.
+% Compiles independently of USG.cls. Notation matches paper/ARTICLE.tex and
+% R/telescoping.R, R/prior.R.
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=28mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+
+\DeclareMathOperator{\Dir}{Dir}
+\DeclareMathOperator{\Cat}{Cat}
+\newcommand{\bs}{\boldsymbol}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Prb}{\mathbb{P}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\bGamma}{\boldsymbol{\Gamma}}
+\newcommand{\one}{\mathbf{1}}
+\newcommand{\Dplus}{D^{+}}
+\newcommand{\Dmax}{D_{\max}}
+\newcommand{\gammaD}{\gamma_{D}}
+\newcommand{\kapD}{\kappa_{D}}
+\newcommand{\etadot}{\eta_{\boldsymbol{\cdot}}}
+\newcommand{\indic}[1]{\mathbf{1}\{#1\}}
+\newcommand{\simplex}{\Delta}
+\newcommand{\balpha}{\boldsymbol{\alpha}}
+\newcommand{\brho}{\boldsymbol{\rho}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\setlist[enumerate]{leftmargin=1.6em,itemsep=0.25em,topsep=0.4em}
+\setlist[itemize]{leftmargin=1.4em,itemsep=0.2em,topsep=0.35em}
+
+\begin{document}
+\thispagestyle{plain}
+\begin{center}
+{\LARGE\bfseries Softmax transitions and the telescoping update}\\[0.45em]
+{\large Failure on the cancellations...}
+\end{center}
+\vspace{0.7em}
+% \noindent\textit{Note accompanying the telescoping GMFM hidden Markov model.}
+% The formulae are those implemented in \texttt{R/telescoping.R} and
+% \texttt{R/prior.R}. Slot count $D$, occupied count $\Dplus$ (code: $K$),
+% and observed occupancy $K_{\mathrm{obs}}$ are distinct.
+% The hurdle lives in the emission; it does not enter $p(D\mid S)$.
+
+\section{What the sampler needs}
+
+Each sweep draws the latent path $\bs S=(S_{it})$ by forward filtering,
+backward sampling, then draws the slot count $D$ from its full conditional
+given $\bs S$, then redraws $\bs\pi^{(0)}$ and the transition rows from
+their Dirichlet posteriors, then updates the hurdle--Dirichlet emission
+parameters. The order of the middle pair is required: $D$ is drawn with
+$\bs\pi^{(0)}$ and $\bGamma$ \emph{integrated out}, and those matrices are
+redrawn only afterwards.
+
+Write $\Dplus=\lvert\{d:\exists(i,t),\,S_{it}=d\}\rvert$ for the number of
+states occupied anywhere on the path, including unobserved visits, and
+relabel those states to $\{1,\dots,\Dplus\}$. Candidates for the next $D$
+are the integers
+\[
+D'\in\{\Dplus,\dots,\Dmax\}.
+\]
+Bayes' rule on the relabelling class $[\bs S]$ is
+\begin{equation}
+\Pi\bigl(D=D'\mid[\bs S]\bigr)
+\ \propto\
+p_D(D')\,\frac{D'!}{(D'-\Dplus)!}\,
+\Prb(\bs S\mid D').
+\label{eq:bayes}
+\end{equation}
+The combinatorial prefactor counts injections of the occupied labels into
+$\{1,\dots,D'\}$. The whole update is exact (acceptance probability one)
+if and only if $\Prb(\bs S\mid D')$ can be evaluated as a function of the
+path counts, $D'$, and the fixed hyperparameters. That is the quantity a
+softmax transition does not supply.
+
+\section{The two tilt functions}
+
+The prior on cardinality is Poisson$(\lambda)$ truncated to
+$\{1,\dots,\Dmax\}$. Given $D$, the initial distribution and every
+transition row are Dirichlet, with concentrations that depend on $D$
+through two scalar maps.
+
+\begin{definition}[GMFM tilt and persistence shift]
+\label{def:tilts}
+For hyperparameters $\alpha_0>0$, $\beta\in[0,1)$, and target stay
+probability $\varsigma\in(0,1)$,
+\begin{equation}
+\gammaD=\alpha_0 D^{-\beta},
+\qquad
+\kapD=\max\Bigl\{\frac{D\varsigma-1}{1-\varsigma},\,0\Bigr\}.
+\label{eq:tilts}
+\end{equation}
+The initial law is $\bs\pi^{(0)}\mid D\sim\Dir_D(\gammaD\one_D)$. Row $k$
+of a transition matrix (shared, or participant-specific $\bGamma^{(i)}$)
+is
+\begin{equation}
+\bGamma_k\mid D\sim\Dir_D(\bs\eta_k),
+\qquad
+\eta_{kl}=\gammaD\bigl(1+\kapD\,\indic{k=l}\bigr),
+\qquad
+\etadot=\gammaD(D+\kapD).
+\label{eq:eta}
+\end{equation}
+\end{definition}
+
+The first map is the mixture-of-finite-mixtures tilt of
+Fr\"uhwirth-Schnatter, Malsiner-Walli and Gr\"un: $\beta=0$ is a static
+Dirichlet, $\beta=1$ is the dynamic case. The second map is the unique
+diagonal shift, inside this one-parameter family, that holds the prior mean
+stay probability fixed across candidate cardinalities.
+
+\begin{proposition}[Prior persistence]
+\label{prop:stay}
+For every $k$,
+$\E[\Gamma_{kk}\mid D]=(1+\kapD)/(D+\kapD)$.
+If $\kapD\equiv\kappa$ is held fixed, this mean is strictly decreasing in
+$D$. If $\kapD=(D\varsigma-1)/(1-\varsigma)$ and $\varsigma>1/D$, then
+$\E[\Gamma_{kk}\mid D]=\varsigma$. The implementation floors the shift at
+zero: when $\varsigma<1/D$ the row is uniform and the realised mean is
+$1/D$, not $\varsigma$.
+\end{proposition}
+
+\begin{proof}
+Dirichlet means are concentration ratios, and $\gammaD$ cancels:
+$\eta_{kk}/\etadot=(1+\kapD)/(D+\kapD)$. Differentiating in $D$ at fixed
+$\kappa$ gives $-(1+\kappa)/(D+\kappa)^2<0$. Solving
+$(1+\kappa)/(D+\kappa)=\varsigma$ for $\kappa$ gives
+$\kappa=(D\varsigma-1)/(1-\varsigma)$, which is positive exactly when
+$\varsigma>1/D$. Uniqueness holds because
+$\kappa\mapsto(1+\kappa)/(D+\kappa)$ is strictly monotone on $\kappa>-1$.
+\end{proof}
+
+Without the stable shift, the telescoping update would compare candidates
+that carry different dynamical priors. At $\kappa=20$ the prior mean stay
+is $0.91$ at $D'=3$ and $0.17$ at $D'=101$. That comparison is not the one
+the model intends. The code therefore uses \eqref{eq:tilts}.
+
+\section{Closed form after integrating the rows}
+
+The path contributes two count arrays. Every participant's first state is
+counted, observed or not, so $n_{\mathrm{init}}=n$:
+\begin{equation}
+n^{(0)}_d=\sum_{i=1}^{n}\indic{S_{i1}=d},
+\qquad
+m_{kl}=\sum_{i=1}^{n}\sum_{t=2}^{T_i}\indic{S_{i,t-1}=k,\,S_{it}=l},
+\qquad
+m_{k\boldsymbol{\cdot}}=\sum_{l}m_{kl}.
+\label{eq:counts}
+\end{equation}
+Under participant-specific rows the same counts are formed per $i$, written
+$m^{(i)}_{kl}$.
+
+\begin{theorem}[Markov path law]
+\label{thm:eppf}
+Marginalising $\bs\pi^{(0)}$ and $\bGamma$ against \eqref{eq:eta},
+\begin{multline}
+\Prb(\bs S\mid D)
+=
+\frac{\Gamma(D\gammaD)}{\Gamma(D\gammaD+n_{\mathrm{init}})}
+\prod_{d=1}^{D}\frac{\Gamma(\gammaD+n^{(0)}_d)}{\Gamma(\gammaD)}
+\\
+\times
+\prod_{k=1}^{D}
+\Biggl(
+\frac{\Gamma(\etadot)}{\Gamma(\etadot+m_{k\boldsymbol{\cdot}})}
+\prod_{l=1}^{D}\frac{\Gamma(\eta_{kl}+m_{kl})}{\Gamma(\eta_{kl})}
+\Biggr).
+\label{eq:eppf}
+\end{multline}
+Under participant-specific transitions the last double product is replaced
+by a sum over $i$ of the same Gamma ratios at $m^{(i)}$.
+\end{theorem}
+
+\begin{proof}
+The Dirichlet--multinomial integral for a single categorical sample of size
+$N$ with counts $\bs n$ and concentration $\bs\alpha$ is
+\[
+\int_{\simplex^{D-1}}\prod_{j=1}^{D}p_j^{n_j}\,
+\Dir(\bs p;\bs\alpha)\,d\bs p
+=\frac{B(\bs\alpha+\bs n)}{B(\bs\alpha)}
+=\frac{\Gamma(\alpha_{\boldsymbol{\cdot}})}{\Gamma(\alpha_{\boldsymbol{\cdot}}+N)}
+\prod_{j}\frac{\Gamma(\alpha_j+n_j)}{\Gamma(\alpha_j)}.
+\]
+The initial states of the $n$ participants are one such sample against
+$\Dir(\gammaD\one_D)$. Each transition row is an independent sample against
+$\Dir(\bs\eta_k)$. Multiply the integrals. Relabelling equivariance of
+\eqref{eq:eta} (the shift sits on the diagonal, so every permutation of
+labels leaves $\bs\eta$ unchanged) makes the same formula available on the
+relabelled path.
+\end{proof}
+
+\begin{corollary}[What vacant slots contribute]
+\label{cor:cancel}
+Let state $d$ be empty in $\bs S$, so $n^{(0)}_d=0$ and $m_{dl}=0$ for all
+$l$. Then:
+\begin{enumerate}
+\item its factor in the initial block is
+$\Gamma(\gammaD)/\Gamma(\gammaD)=1$;
+\item its \emph{row} in the transition block is
+$\Gamma(\etadot)/\Gamma(\etadot)\cdot\prod_l\Gamma(\eta_{dl})/\Gamma(\eta_{dl})=1$;
+\item its \emph{column} contributes a factor $1$ to every occupied row's
+kernel product, but it is not absent from that row: it enters
+$\etadot=\sum_{l\le D}\eta_{kl}=\gammaD(D+\kapD)$.
+\end{enumerate}
+Hence $\Prb(\bs S\mid D)$ depends on $D$ through $\gammaD$, $\kapD$, and
+the occupied-row normaliser $\etadot$, and through nothing else.
+\end{corollary}
+
+Point (iii) is the whole content of the tilts in the update. Vacant
+destinations do not appear as extra Gamma ratios. They appear as a
+\emph{known scalar} added to every occupied row's concentration sum. That
+scalar is a function of $D$ and $(\alpha_0,\beta,\varsigma)$ only. It does
+not depend on a random draw of unused parameters.
+
+Dropping the unit factors, inserting \eqref{eq:eppf} into \eqref{eq:bayes},
+and writing $\gamma'=\alpha_0(D')^{-\beta}$,
+$\kappa'=\kappa_{D'}$,
+$\eta'_{kl}=\gamma'(1+\kappa'\indic{k=l})$,
+$\eta'_{\boldsymbol{\cdot}}=\gamma'(D'+\kappa')$
+gives the implemented log full conditional, for
+$D'\in\{\Dplus,\dots,\Dmax\}$:
+\begin{align}
+\log\Pi\bigl(D=D'\mid[\bs S]\bigr)
+&=
+\log p_D(D')+\log D'!-\log(D'-\Dplus)!
+\nonumber\\
+&\quad
++\log\Gamma(D'\gamma')-\log\Gamma(D'\gamma'+n)
+\nonumber\\
+&\quad
++\sum_{d=1}^{\Dplus}\bigl[\log\Gamma(\gamma'+n^{(0)}_d)-\log\Gamma(\gamma')\bigr]
+\nonumber\\
+&\quad
++\sum_{k=1}^{\Dplus}\Bigl[
+\log\Gamma(\eta'_{\boldsymbol{\cdot}})
+-\log\Gamma(\eta'_{\boldsymbol{\cdot}}+m_{k\boldsymbol{\cdot}})
+\Bigr]
+\nonumber\\
+&\quad
++\sum_{k=1}^{\Dplus}\sum_{l=1}^{\Dplus}
+\bigl(\log\Gamma(\eta'_{kl}+m_{kl})-\log\Gamma(\eta'_{kl})\bigr)
++C,
+\label{eq:telesc}
+\end{align}
+with $n=n_{\mathrm{init}}$ and $C$ free of $D'$. This is
+\texttt{telescoping\_log\_posterior} in \texttt{R/telescoping.R}. Empty
+rows are skipped; columns with zero count contribute
+$\log\Gamma(\eta)-\log\Gamma(\eta)=0$, so only the occupied block is
+evaluated. Vacant slots still enter through $\eta'_{\boldsymbol{\cdot}}$.
+
+The emission, hurdle included, is absent from \eqref{eq:telesc}. Given
+$\bs S$, the observation factors do not depend on $D'$, and a newly created
+slot's $(\balpha_d,\brho_d)$ is drawn from the $D$-free base measure, which
+integrates to one.
+
+\section{Where softmax breaks}
+
+The multinomial-logit (softmax) specification asked for in this setting is
+\begin{equation}
+\log\frac{\Gamma^{(i)}_{kl,t}}{\Gamma^{(i)}_{kk,t}}
+=\beta^{0}_{kl}+\bs\beta_{kl}^{\top}\bs w_{it}+u_{i,kl},
+\qquad
+u_{i,kl}\sim\mathcal N(0,\sigma^{2}_{kl}),
+\label{eq:softmax}
+\end{equation}
+with $\eta^{(i)}_{kk,t}=0$ for identifiability and
+\begin{equation}
+\Gamma^{(i)}_{kl,t}
+=\frac{\exp(\eta^{(i)}_{kl,t})}{\sum_{m=1}^{D}\exp(\eta^{(i)}_{km,t})}.
+\label{eq:smrow}
+\end{equation}
+There is nothing wrong with \eqref{eq:softmax} as a model of covariate- or
+person-dependent switching. The obstruction is that it cannot be substituted
+into \eqref{eq:bayes} while keeping the update that the sampler actually
+runs.
+
+Write, for a generic row and a candidate $D'$, the logits
+$\bs\eta\in\R^{D'}$ (one coordinate fixed at zero) and the occupied and
+vacant index sets $\mathcal O=\{1,\dots,\Dplus\}$,
+$\mathcal V=\{\Dplus+1,\dots,D'\}$. Softmax on that row is
+\begin{equation}
+\Gamma_{l}(\bs\eta)
+=\frac{e^{\eta_l}}{Z_{\mathcal O}(\bs\eta)+Z_{\mathcal V}(\bs\eta)},
+\qquad
+Z_{\mathcal A}(\bs\eta)=\sum_{m\in\mathcal A}e^{\eta_m}.
+\label{eq:splitZ}
+\end{equation}
+
+\vspace{0.4em}
+\begin{theorem}[Obstruction]
+\label{thm:obstruct}
+Let $\pi_{D'}$ be any prior on the logits of \eqref{eq:smrow} that puts
+positive mass on the vacant coordinates $\eta_{\mathcal V}$. Then:
+\begin{enumerate}
+\item $\Prb(\bs S\mid D')=\displaystyle\int L(\bs S\mid\bs\eta,D')\,\pi_{D'}(d\bs\eta)$
+has no Dirichlet--multinomial (Gamma-ratio) closed form.
+\item For every occupied destination $l\in\mathcal O$ with $m_{\boldsymbol{\cdot}l}$
+not identically zero, $L(\bs S\mid\bs\eta,D')$ depends on $\eta_{\mathcal V}$
+through $Z_{\mathcal V}$. Vacant logits do not cancel.
+\item Consequently $\Prb(\bs S\mid D')$ is not a function of the occupied
+counts, $D'$, and the hyperparameters alone. Equation \eqref{eq:telesc} is
+not the full conditional of $D$ under \eqref{eq:softmax}, and there is no
+rearrangement of Gamma functions that makes it so.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+The complete-data transition factor of one row is
+\begin{equation}
+\prod_{l=1}^{D'}\Gamma_l^{m_l}
+=\exp\Bigl(\sum_{l\in\mathcal O}m_l\eta_l\Bigr)
+\bigl(Z_{\mathcal O}(\bs\eta)+Z_{\mathcal V}(\bs\eta)\bigr)^{-m_{\boldsymbol{\cdot}}},
+\label{eq:rowlik}
+\end{equation}
+using $m_l=0$ for $l\in\mathcal V$. The occupied kernel
+$\exp(\sum_{l\in\mathcal O}m_l\eta_l)$ does not involve vacant logits. The
+normaliser does: any $\eta_v$ for $v\in\mathcal V$ appears as
+$e^{\eta_v}$ added to every occupied probability's denominator. Setting
+$m_v=0$ does \emph{not} remove $\eta_v$ from the likelihood, because softmax
+is a function of the \emph{sum} of the exponentiated logits, not a product
+measure on the coordinates.
+
+A Gaussian (or any fully supported density) on $\bs\eta$ therefore leaves
+an integral in $\eta_{\mathcal V}$ inside $\Prb(\bs S\mid D')$. That integral
+is not a Beta function. The Dirichlet integral is available only when the
+prior on the row is Dirichlet on the simplex, whose density
+$\prod_l \Gamma_l^{\eta_l-1}/B(\bs\eta)$ is conjugate to
+$\prod_l \Gamma_l^{m_l}$ and produces
+$B(\bs\eta+\bs m)/B(\bs\eta)$. Softmax-Gaussian and Dirichlet are different
+priors on $\simplex^{D'-1}$; conjugacy does not transfer.
+
+For (ii), differentiate \eqref{eq:splitZ} in a vacant logit:
+\[
+\frac{\partial}{\partial\eta_v}\log\Gamma_l
+=-\Gamma_v(\bs\eta)<0
+\qquad(l\in\mathcal O,\ v\in\mathcal V).
+\]
+Every occupied transition probability is strictly decreasing in every vacant
+logit. The vacant coordinates are not variation-independent of the occupied
+block.
+
+For (iii), the implemented update evaluates \eqref{eq:telesc} at every
+$D'$ using only $(n^{(0)},\bs M,\gamma',\kappa')$. Under softmax the
+correct integrand still contains $\eta_{\mathcal V}$, a random vector of
+length $D'-\Dplus$ redrawn from the prior and, in this project,
+$D_{\max}=n+1$. Substituting \eqref{eq:telesc} would compute the
+Dirichlet-row posterior, which is a different probability.
+\end{proof}
+
+Two further structural mismatches sit underneath the integral.
+
+\paragraph{Dimension.}
+After identifiability, the logit vector for one row has length $D'-1$.
+Changing $D'$ changes the dimension of the parameter. Dirichlet
+concentrations also live in a $D'$-dimensional simplex, but they remain a
+\emph{deterministic} function of $D'$ through \eqref{eq:tilts}: moving from
+$D'$ to $D'+1$ retunes $\gamma$ and $\kappa$ and adds a known
+concentration $\gamma_{D'+1}$ to $\etadot$. Softmax has no such
+deterministic padding. Adding a destination multiplies every occupied
+probability by the random factor
+\begin{equation}
+\frac{Z_{\mathcal O}}{Z_{\mathcal O}+e^{\eta_{\mathrm{new}}}}
+\in(0,1).
+\label{eq:shrink}
+\end{equation}
+That factor is a draw, not a hyperparameter.
+
+\paragraph{Equivariance.}
+The derivation of \eqref{eq:telesc} uses relabelling equivariance:
+$\Prb(\bs S\mid D)=\Prb(\sigma(\bs S)\mid D)$ for every permutation
+$\sigma$ of $\{1,\dots,D\}$, which holds because $\eta_{\sigma(k)\sigma(l)}=\eta_{kl}$
+when the only asymmetry is a diagonal shift. A covariate index, a
+baseline destination, or a destination-specific Gaussian random effect
+breaks that symmetry. Without it, the combinatorial factor
+$D'!/(D'-\Dplus)!$ in \eqref{eq:bayes} is no longer the size of an
+equal-probability class.
+
+\section{Consequences}
+
+\subsection*{Dirichlet rows with the two tilts (what the code runs)}
+
+\begin{itemize}
+\item $\Prb(\bs S\mid D')$ is \eqref{eq:eppf}, a finite combination of
+log-Gamma evaluations on the occupied block.
+\item $D\mid[\bs S]$ is a categorical draw on $\{\Dplus,\dots,\Dmax\}$
+with acceptance probability one.
+\item Vacant slots remain in the model. They affect the posterior of $D$
+only through $\gammaD$, $\kapD$, and $\etadot$. Occupied count $\Dplus$
+and slot count $D$ stay distinct; $K_{\mathrm{obs}}$ is a third quantity.
+\item Participant-specific Dirichlet rows
+$\bGamma^{(i)}_k\sim\Dir(\bs\eta_k)$ keep the same closed form, with
+counts $m^{(i)}$. Heterogeneity in switching is partial pooling toward
+$\bs\eta$, not a logit random effect.
+\item Covariates on transitions are given up. Whether a food-group
+composition at visit $t$ changes the chance of switching before $t+1$ is
+not a parameter of this model.
+\item Emissions, including the hurdle $(\rho_{dj},q_{dj})$ with presence
+$\rho_{dj}/q_{dj}$, do not inform $D\mid S$. Cardinality is identified
+from the dynamics of the path.
+\end{itemize}
+
+\subsection*{Softmax / hierarchical multinomial logit}
+
+\begin{itemize}
+\item There is no version of \eqref{eq:telesc} to recover by algebra. The
+quantity compared across $D'$ is not a function of the occupied block
+alone.
+\item A valid unknown-$D$ sampler for \eqref{eq:softmax} would have to
+rederive $p(D\mid S)$, typically by reversible-jump or transdimensional
+Metropolis--Hastings on $\bs\eta$, with proposals that create and destroy
+logit coordinates. That is a different algorithm, with acceptance
+probability below one, and it is not implemented.
+\item Conditioning on vacant logits rather than integrating them, then
+correcting by independence Metropolis, is possible in principle. The
+update of $D$ then inherits the mixing of the vacant-parameter block.
+Exactness of the present telescoping step is lost.
+\item Using \eqref{eq:telesc} while fitting softmax rows samples from the
+wrong target: the Dirichlet-tilt posterior on $D$, not the softmax
+posterior.
+\item Empty-state logits are weakly identified. They enter every occupied
+probability through $Z_{\mathcal V}$ and are informed by no transitions
+into or out of those states. Telescoping \emph{requires} empty states;
+softmax makes them a source of noise in the row normaliser at every
+candidate $D'$ up to $\Dmax$.
+\item Fitting softmax at a point estimate of $D$ taken from a first-stage
+telescoping run is a two-stage procedure that does not propagate
+uncertainty in $D$. It is a different inferential claim.
+\end{itemize}
+
+\section{The mathematical components}
+
+\begin{center}
+\small\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.15cm}
+                >{\raggedright\arraybackslash}p{11.65cm}@{}}
+\toprule
+object & role \\
+\midrule
+$D$ &
+  number of slots; dimension of $\bs\pi^{(0)}$ and of each row of $\bGamma$ \\
+$\Dplus$ &
+  states occupied anywhere on $\bs S$ (code: $K$) \\
+$K_{\mathrm{obs}}$ &
+  states occupied at an observed visit; $K_{\mathrm{obs}}\le\Dplus\le D$ \\
+$\bs S$, $[\bs S]$ &
+  latent path; relabelling class after mapping occupied labels to $1,\dots,\Dplus$ \\
+path counts &
+  $n_{\mathrm{init}}=n$, $n^{(0)}_d$, $m_{kl}$ on the full visit grid \\
+$\gammaD$ &
+  $\alpha_0 D^{-\beta}$. GMFM weight tilt; Dirichlet precision as a function of $D$ \\
+$\kapD$ &
+  $\max\{(D\varsigma-1)/(1-\varsigma),0\}$. Persistence tilt; holds
+  $\E[\Gamma_{kk}\mid D]=\varsigma$ when admissible \\
+$\eta_{kl}$, $\etadot$ &
+  $\eta_{kl}=\gammaD(1+\kapD\indic{k=l})$, $\etadot=\gammaD(D+\kapD)$.
+  Vacant slots enter only through $\etadot$ \\
+Beta integral &
+  $B(\bs\alpha+\bs n)/B(\bs\alpha)$; source of every Gamma ratio in \eqref{eq:eppf} \\
+cardinality kernel &
+  $p_D(D')\,D'!/(D'-\Dplus)!$ (truncated Poisson times label injections) \\
+hurdle emission &
+  $h(\bs X\mid\balpha_s,\brho_s)$; cancelled in $D\mid\bs S$ \\
+$Z_{\mathcal O}$, $Z_{\mathcal V}$ &
+  softmax row partition; the vacant sum $Z_{\mathcal V}$ does not cancel \\
+shrinkage factor &
+  \eqref{eq:shrink}, a random factor in $(0,1)$ when a vacant logit is added \\
+simplex &
+  $\simplex^{D-1}$ carries both priors; they are not interchangeable in \eqref{eq:bayes} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.8em}
+\noindent
+The telescoping step is a Dirichlet--multinomial calculation with two
+$D$-dependent tilts. Softmax replaces that integrand with a non-conjugate
+map whose vacant coordinates do not cancel. Those two constructions do not
+share a closed-form $p(D\mid S)$.
+
+\end{document}

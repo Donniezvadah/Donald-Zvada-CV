@@ -1,0 +1,311 @@
+%%%%%%%%%%%%%%%%%
+% This is an sample CV template created using altacv.cls
+% (v1.7, 9 August 2023) written by LianTze Lim (liantze@gmail.com). Compiles with pdfLaTeX, XeLaTeX and LuaLaTeX.
+%
+%% It may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of LaTeX
+%% version 2003/12/01 or later.
+%%%%%%%%%%%%%%%%
+
+%% Use the "normalphoto" option if you want a normal photo instead of cropped to a circle
+% \documentclass[10pt,a4paper,normalphoto]{altacv}
+
+\documentclass[10pt,a4paper,ragged2e,withhyper]{altacv}
+%% AltaCV uses the fontawesome5 and packages.
+%% See http://texdoc.net/pkg/fontawesome5 for full list of symbols.
+
+% Change the page layout if you need to
+\geometry{left=1.25cm,right=1.25cm,top=1.5cm,bottom=1.5cm,columnsep=1.2cm}
+
+% The paracol package lets you typeset columns of text in parallel
+\usepackage{paracol}
+
+% Change the font if you want to, depending on whether
+% you're using pdflatex or xelatex/lualatex
+% WHEN COMPILING WITH XELATEX PLEASE USE
+% xelatex -shell-escape -output-driver="xdvipdfmx -z 0" sample.tex
+\ifxetexorluatex
+  % If using xelatex or lualatex:
+  \setmainfont{Roboto Slab}
+  \setsansfont{Lato}
+  \renewcommand{\familydefault}{\sfdefault}
+\else
+  % If using pdflatex:
+  \usepackage[rm]{roboto}
+  \usepackage[defaultsans]{lato}
+  % \usepackage{sourcesanspro}
+  \renewcommand{\familydefault}{\sfdefault}
+\fi
+
+% Change the colours if you want to
+\definecolor{SlateGrey}{HTML}{2E2E2E}
+\definecolor{LightGrey}{HTML}{666666}
+\definecolor{DarkPastelRed}{HTML}{450808}
+\definecolor{PastelRed}{HTML}{8F0D0D}
+\definecolor{GoldenEarth}{HTML}{E7D192}
+\colorlet{name}{black}
+\colorlet{tagline}{PastelRed}
+\colorlet{heading}{DarkPastelRed}
+\colorlet{headingrule}{GoldenEarth}
+\colorlet{subheading}{PastelRed}
+\colorlet{accent}{PastelRed}
+\colorlet{emphasis}{SlateGrey}
+\colorlet{body}{LightGrey}
+
+% Change some fonts, if necessary
+\renewcommand{\namefont}{\Huge\rmfamily\bfseries}
+\renewcommand{\personalinfofont}{\footnotesize}
+\renewcommand{\cvsectionfont}{\LARGE\rmfamily\bfseries}
+\renewcommand{\cvsubsectionfont}{\large\bfseries}
+
+
+% Change the bullets for itemize and rating marker
+% for \cvskill if you want to
+\renewcommand{\cvItemMarker}{{\small\textbullet}}
+\renewcommand{\cvRatingMarker}{\faCircle}
+% ...and the markers for the date/location for \cvevent
+% \renewcommand{\cvDateMarker}{\faCalendar*[regular]}
+% \renewcommand{\cvLocationMarker}{\faMapMarker*}
+
+
+% If your CV/résumé is in a language other than English,
+% then you probably want to change these so that when you
+% copy-paste from the PDF or run pdftotext, the location
+% and date marker icons for \cvevent will paste as correct
+% translations. For example Spanish:
+% \renewcommand{\locationname}{Ubicación}
+% \renewcommand{\datename}{Fecha}
+
+
+%% Use (and optionally edit if necessary) this .tex if you
+%% want to use an author-year reference style like APA(6)
+%% for your publication list
+% \input{pubs-authoryear.tex}
+
+%% Use (and optionally edit if necessary) this .tex if you
+%% want an originally numerical reference style like IEEE
+%% for your publication list
+\input{pubs-num.tex}
+
+%% sample.bib contains your publications
+\addbibresource{sample.bib}
+
+\begin{document}
+
+\name{Donald Zvada}
+\tagline{Quantitative Risk Analyst/ Data Scientist}
+%% You can add multiple photos on the left or right
+%%\photoR{2.8cm}{Globe_High}
+% \photoL{2.5cm}{Yacht_High,Suitcase_High}
+
+\personalinfo{
+  % Not all of these are required!
+  \email{donald.zvada@gmail.com}
+  \phone{00263 785 061 181}
+  \location{Harare, ZIMBABWE}
+  %\homepage{www.homepage.com}
+  %\twitter{@twitterhandle}
+  \linkedin{\href{https://www.linkedin.com/in/donald-zvada-1528bb1a7}}
+  %\github{your_id}
+  %\orcid{0000-0000-0000-0000}
+  %% You can add your own arbitrary detail with
+  %% \printinfo{symbol}{detail}[optional hyperlink prefix]
+  % \printinfo{\faPaw}{Hey ho!}[https://example.com/]
+
+  %% Or you can declare your own field with
+  %% \NewInfoFiled{fieldname}{symbol}[optional hyperlink prefix] and use it:
+  % \NewInfoField{gitlab}{\faGitlab}[https://gitlab.com/]
+  % \gitlab{your_id}
+  %%
+  %% For services and platforms like Mastodon where there isn't a
+  %% straightforward relation between the user ID/nickname and the hyperlink,
+  %% you can use \printinfo directly e.g.
+  % \printinfo{\faMastodon}{@username@instace}[https://instance.url/@username]
+  %% But if you absolutely want to create new dedicated info fields for
+  %% such platforms, then use \NewInfoField* with a star:
+  % \NewInfoField*{mastodon}{\faMastodon}
+  %% then you can use \mastodon, with TWO arguments where the 2nd argument is
+  %% the full hyperlink.
+  % \mastodon{@username@instance}{https://instance.url/@username}
+}
+
+% \makecvheader
+%% Depending on your tastes, you may want to make fonts of itemize environments slightly smaller
+% \AtBeginEnvironment{itemize}{\small}
+
+%% Set the left/right column width ratio to 6:4.
+\columnratio{0.6}
+
+% Start a 2-column paracol. Both the left and right columns will automatically
+% break across pages if things get too long.
+\begin{paracol}{2}
+
+\cvsection{SUMMARY}
+“Experienced Quantitative Risk Analyst with a strong background in data science. Significant expertise in credit risk model development, validation, and IFRS 9 compliance. Skilled in various aspects of data analytics, economic capital modeling, and stress testing models development. Passionate about solving real-world problems using quantitative risk methods and statistics. Committed to continuous professional development and excellence. '
+
+
+%\divider
+
+\cvsection{Experience}
+
+\cvevent{Quantitative Risk Assistant}{EY}{December 2023 -- August 2024}{Harare, Zimbabwe}
+\begin{itemize}
+\item  Develops complex systems \& programs that measure aggregate risk exposures
+\item Monitors and analyses of key performance credit risk indicators
+\item Modelling PD, LGD, EAD \& SICR
+\item Model validation (IFRS 9, IRB, Basel 1 \& 2) \& model validation reports
+\item Develops independent financial analysis \& statistical reporting to forecast
+results for specific stress test scenarios
+\item Responsible for presenting findings to various levels of leadership\\
+\cvtag{Python}
+\cvtag{Excel}
+\cvtag{R}
+\end{itemize}
+
+\divider
+
+\cvevent{Data Analyst Intern}{EcoCash Holdings}{October 2021 -- November 2022}{Harare, Zimbabwe}
+\begin{itemize}
+\item Data analysis
+\item Data cleaning
+\item Systems tester (beta tests)
+\item Report writing and presentation
+\item PowerBi Dashboards\\
+\cvtag{Python}
+\cvtag{Excel}
+\cvtag{R}
+\cvtag{PowerBi}
+\cvtag{PowerPoint}
+
+\end{itemize}
+
+%\cvsection{Projects}
+
+%\cvevent{Project 1}{Funding agency/institution}{}{}
+%\begin{itemize}
+%\item Details
+%\end{itemize}
+
+%\divider
+
+%\cvevent{Project 2}{Funding agency/institution}{Project duration}{}
+%A short abstract would also work.
+
+\medskip
+
+
+
+% use ONLY \newpage if you want to force a page break for
+% ONLY the current column
+%\newpage
+
+
+
+
+
+
+\cvsection{Most Proud of}
+
+\cvachievement{\faTrophy}{Chancellor's Award issued by The President of Zimbabwe}{University overall best graduating male student class of 2023}
+
+\divider
+
+
+\cvachievement{\faHeartbeat}{Moonlight Award}{University overall best student}
+
+\divider
+
+\cvachievement{\faHeartbeat}{Vice Chancellor's}{Overall best student in the department}
+
+
+\cvachievement{\faHeartbeat}{2 Nust Book Prizes}{Best student in the department year 2021 and 2023}
+\cvachievement{\faHeartbeat}{MasterCard Foundation Scholarship}
+
+\switchcolumn
+
+\cvsection{My Life Philosophy}
+
+\begin{quote}
+``In the realm of uncertainty, data is our compass and quantification our language.''
+\end{quote}
+
+
+\cvsection{Strengths}
+
+\cvtag{Hard-working}
+\cvtag{Eye for detail}\\
+\cvtag{Motivator \& Leader}
+
+\divider\smallskip
+
+\cvtag{Python}
+\cvtag{Excel}
+\cvtag{R}
+\cvtag{PowerBi}
+\cvtag{SQL}\\
+\cvtag{Statistical Analysis}
+
+
+\divider
+
+\cvsection{AREAS Of EXPERTISE}
+\cvtag{Quantitative Risk Analysis}
+\cvtag{Machine Learning}
+\cvtag{Policy Review and Development}
+\cvtag{Data Science}
+\cvtag{Credit Control}
+\cvtag{Monitoring and Evaluation}
+
+
+
+\cvsection{Languages}
+
+\cvskill{Shona}{5}
+\divider
+
+\cvskill{English}{4}
+\divider
+
+%\cvskill{German}{3.5} %% Supports X.5 values.
+
+%% Yeah I didn't spend too much time making all the
+%% spacing consistent... sorry. Use \smallskip, \medskip,
+%% \bigskip, \vspace etc to make adjustments.
+\medskip
+
+\cvsection{Education}
+
+%\cvevent{Ph.D.\ in Your Discipline}{Your University}{Sept 2002 -- June 2006}{}
+%Thesis title: Wonderful Research
+
+%\divider
+\cvevent{Msc.\ in Mathematical Sciences }{Stellenbosch University, AIMS South Africa}{September 2024 -- Ongoing}{}
+
+\cvevent{Applied Data Science Lab}{ WorldQuant University}{January 2024 -- present}{}
+
+\divider
+
+\cvevent{B.Sc.\ in Operations Research and Statistics}{National University of Science and Technology}{May 2019 -- August 2023}{}
+
+
+\cvsection{Certificates}
+Refer to:
+\href{https://www.linkedin.com/in/donald-zvada-1528bb1a7}{My LinkedIn Profile}
+
+% \divider
+
+\cvsection{Referees}
+
+% \cvref{name}{email}{mailing address}
+\cvref{Provided upon request}
+
+
+
+\end{paracol}
+
+
+\end{document}
